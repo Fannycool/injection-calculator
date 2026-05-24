@@ -447,11 +447,11 @@ const i18n = {
     btnGenerate: '生成注射日历',
     resultsTitle: '注射日程',
     btnPrint: '打印',
-    paywallTitle: '解锁完整疗程日历',
-    paywallDesc: '免费展示前5次注射。解锁全部',
-    paywallDesc2: '次注射安排，含可打印版本。',
-    btnPay: 'PayPal $1 解锁',
-    btnEmail: '留下邮箱 · 免费获取',
+    paywallTitle: '解锁完整注射日历',
+    paywallDesc: '免费展示前5次。查看全部',
+    paywallDesc2: '次注射安排，不错过每一次。',
+    btnPay: '解锁完整日历 — $1',
+    btnEmail: '发送日程到邮箱（免费）',
     reset: '重置计算',
     totalInjections: '总注射次数',
     duration: '疗程跨度',
@@ -486,11 +486,11 @@ const i18n = {
     btnGenerate: 'Generate Calendar',
     resultsTitle: 'Injection Schedule',
     btnPrint: 'Print',
-    paywallTitle: 'Unlock Full Schedule',
-    paywallDesc: 'First 5 injections shown for free. Unlock all',
-    paywallDesc2: 'injections with print version.',
-    btnPay: 'PayPal $1 to Unlock',
-    btnEmail: 'Get Free via Email',
+    paywallTitle: 'Unlock Your Full Injection Schedule',
+    paywallDesc: 'First 5 injections shown for free. See all',
+    paywallDesc2: 'injections to stay on track.',
+    btnPay: 'Unlock Full Schedule — $1',
+    btnEmail: 'Email My Schedule (Free)',
     reset: 'Reset',
     totalInjections: 'Total Injections',
     duration: 'Duration',
@@ -873,6 +873,18 @@ function init() {
 }
 
 init();
+</script>
+<script>
+(function(){
+  var k='pv_pinplan_en',d={total:0,unique:0,first:'',last:''};
+  try{var s=localStorage.getItem(k);if(s)d=JSON.parse(s);}catch(e){}
+  d.total++;
+  var t=new Date().toISOString().split('T')[0];
+  if(d.last!==t){d.unique++;d.last=t;}
+  if(!d.first)d.first=t;
+  try{localStorage.setItem(k,JSON.stringify(d));}catch(e){}
+  console.log('Traffic:',d.total+' total, '+d.unique+' unique days, first:'+d.first);
+})();
 </script>
 </body>
 </html>
