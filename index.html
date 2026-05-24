@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PinPlan – Injection Schedule Calculator | 注射日程计算器</title>
+<style>
+:root {
+  --primary: #2563EB;
+  --primary-light: #DBEAFE;
+  --primary-dark: #1D4ED8;
+  --success: #059669;
+  --success-light: #D1FAE5;
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --danger: #DC2626;
+  --danger-light: #FEE2E2;
+  --bg: #F1F5F9;
+  --card: #FFFFFF;
+  --text: #1E293B;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+  --border: #E2E8F0;
+  --border-focus: #93C5FD;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,.1), 0 4px 6px rgba(0,0,0,.05);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container { max-width: 720px; margin: 0 auto; padding: 16px; }
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 32px 16px 24px;
+}
+.header .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -.5px;
+}
+.header .logo .icon {
+  width: 40px; height: 40px;
+  background: var(--primary);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 20px;
+}
+.header .subtitle {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+.lang-toggle {
+  margin-top: 12px;
+  display: inline-flex;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.lang-toggle button {
+  padding: 6px 16px; border: none; background: none;
+  font-size: 13px; cursor: pointer; color: var(--text-secondary);
+  transition: all .2s;
+}
+.lang-toggle button.active {
+  background: var(--primary); color: #fff;
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+.card-header {
+  font-size: 18px; font-weight: 600;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-header .badge {
+  font-size: 12px; font-weight: 500;
+  padding: 3px 10px; border-radius: 12px;
+}
+.badge-required { background: var(--danger-light); color: var(--danger); }
+.badge-optional { background: var(--primary-light); color: var(--primary); }
+
+/* Form */
+.form-row {
+  display: flex; gap: 12px; margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.form-group {
+  flex: 1; min-width: 140px;
+}
+.form-group label {
+  display: block;
+  font-size: 13px; font-weight: 600; color: var(--text-secondary);
+  margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px;
+}
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 15px; font-family: var(--font);
+  transition: border-color .2s, box-shadow .2s;
+  background: #FAFBFC;
+}
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  background: #fff;
+}
+
+/* Day checkboxes */
+.day-checkboxes {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.day-checkboxes label {
+  display: flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .2s;
+  background: #FAFBFC; user-select: none;
+}
+.day-checkboxes input { display: none; }
+.day-checkboxes input:checked + span {
+  background: var(--primary); color: #fff; border-color: var(--primary);
+}
+.day-checkboxes label:hover {
+  border-color: var(--primary);
+}
+.day-checkboxes.disabled label {
+  opacity: .4; pointer-events: none;
+}
+
+.avoid-section { margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 12px 28px;
+  font-size: 16px; font-weight: 600;
+  border: none; border-radius: var(--radius-sm);
+  cursor: pointer; transition: all .2s;
+  font-family: var(--font);
+}
+.btn-primary {
+  background: var(--primary); color: #fff;
+  width: 100%;
+}
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Results */
+.results { display: none; }
+.results.show { display: block; }
+
+.summary-bar {
+  display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.summary-item {
+  flex: 1; min-width: 100px;
+  text-align: center;
+  padding: 16px 12px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+}
+.summary-item .num {
+  font-size: 28px; font-weight: 700; color: var(--primary);
+}
+.summary-item .label {
+  font-size: 12px; color: var(--text-secondary); margin-top: 4px;
+}
+
+/* Injection list */
+.injection-list { display: flex; flex-direction: column; gap: 8px; }
+.injection-item {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 16px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--primary);
+  transition: all .2s;
+}
+.injection-item:nth-child(-n+5) { border-left-color: var(--success); background: var(--success-light); }
+.injection-item .order {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  flex-shrink: 0;
+}
+.injection-item:nth-child(-n+5) .order { background: var(--success); }
+.injection-item .info { flex: 1; }
+.injection-item .date-str { font-weight: 600; font-size: 15px; }
+.injection-item .day-str { font-size: 13px; color: var(--text-secondary); }
+.injection-item .week-num { font-size: 12px; color: var(--text-muted); }
+
+/* Paywall */
+.paywall {
+  position: relative;
+  margin-top: 16px;
+}
+.paywall-overlay {
+  position: relative;
+}
+.paywall-overlay.blurred .injection-item:nth-child(n+6) {
+  filter: blur(6px);
+  pointer-events: none;
+  user-select: none;
+}
+.paywall-cta {
+  text-align: center;
+  padding: 32px 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.95) 30%, #fff 100%);
+  border-radius: var(--radius);
+  margin-top: -40px;
+  position: relative;
+  z-index: 2;
+}
+.paywall-cta h3 {
+  font-size: 20px; font-weight: 700; margin-bottom: 8px;
+}
+.paywall-cta p {
+  color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;
+}
+.paywall-buttons { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.btn-pay {
+  background: #FFC439; color: #1A1A1A; padding: 12px 24px;
+  font-weight: 600;
+}
+.btn-pay:hover { background: #F5B800; }
+.btn-email {
+  background: var(--card); color: var(--primary); border: 2px solid var(--primary);
+}
+.btn-email:hover { background: var(--primary-light); }
+.btn-icon { width: 18px; height: 18px; }
+
+/* Footer */
+.footer {
+  text-align: center; padding: 24px 16px 40px;
+  color: var(--text-muted); font-size: 13px;
+}
+.footer a { color: var(--primary); text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #1E293B; color: #fff;
+  padding: 12px 24px; border-radius: 20px;
+  font-size: 14px; font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  z-index: 999; opacity: 0; transition: opacity .3s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* Responsive */
+@media (max-width: 480px) {
+  .container { padding: 8px; }
+  .card { padding: 16px; }
+  .header { padding: 20px 12px 16px; }
+  .header .logo { font-size: 22px; }
+  .day-checkboxes label { width: 38px; height: 38px; font-size: 12px; }
+  .form-row { flex-direction: column; gap: 12px; }
+  .summary-item .num { font-size: 22px; }
+}
+
+/* Print */
+@media print {
+  body { background: #fff; }
+  .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+  .btn, .lang-toggle, .paywall-cta, .footer, .header .subtitle { display: none !important; }
+  .paywall-overlay.blurred .injection-item:nth-child(n+6) { filter: none; }
+  .injection-item { border-left-width: 2px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="header">
+  <div class="logo">
+    <div class="icon">&diams;</div>
+    PinPlan
+  </div>
+  <p class="subtitle" data-i18n="subtitle">精准注射日程规划 — 自动避开公休日，生成完整疗程日历</p>
+  <div class="lang-toggle">
+    <button id="btn-zh" class="active">中文</button>
+    <button id="btn-en">EN</button>
+  </div>
+</header>
+
+<main>
+  <!-- Input Card -->
+  <div class="card" id="input-card">
+    <div class="card-header">
+      <span data-i18n="formTitle">疗程信息</span>
+      <span class="badge badge-required" data-i18n="badgeRequired">必填</span>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label data-i18n="startDate">首次注射日期 *</label>
+        <input type="date" id="startDate">
+      </div>
+      <div class="form-group">
+        <label data-i18n="weeks">疗程周数 *</label>
+        <select id="weeks">
+          <option value="4">4 周</option>
+          <option value="8" selected>8 周</option>
+          <option value="12">12 周</option>
+          <option value="16">16 周</option>
+          <option value="24">24 周</option>
+          <option value="36">36 周</option>
+          <option value="48">48 周</option>
+          <option value="52">52 周</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="frequency">每周注射频次 *</label>
+        <select id="frequency">
+          <option value="1">1 次/周</option>
+          <option value="2">2 次/周</option>
+          <option value="3" selected>3 次/周</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:16px">
+      <label data-i18n="preferDays">首选注射日（请选择与频次相同数量的日期）</label>
+      <div class="day-checkboxes" id="preferDays">
+        <label><input type="checkbox" value="1"><span data-i18n="mon">一</span></label>
+        <label><input type="checkbox" value="2"><span data-i18n="tue">二</span></label>
+        <label><input type="checkbox" value="3" checked><span data-i18n="wed">三</span></label>
+        <label><input type="checkbox" value="4"><span data-i18n="thu">四</span></label>
+        <label><input type="checkbox" value="5" checked><span data-i18n="fri">五</span></label>
+        <label><input type="checkbox" value="6"><span data-i18n="sat">六</span></label>
+        <label><input type="checkbox" value="0"><span data-i18n="sun">日</span></label>
+      </div>
+    </div>
+
+    <div class="avoid-section">
+      <div class="card-header" style="margin-bottom:12px">
+        <span data-i18n="avoidTitle">避开日期设置</span>
+        <span class="badge badge-optional" data-i18n="badgeOptional">选填</span>
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label data-i18n="avoidDays">避开每周固定休息日（如医院周日不接诊）</label>
+        <div class="day-checkboxes avoid-days" id="avoidDays">
+          <label><input type="checkbox" value="1"><span data-i18n="mon">一</span></label>
+          <label><input type="checkbox" value="2"><span data-i18n="tue">二</span></label>
+          <label><input type="checkbox" value="3"><span data-i18n="wed">三</span></label>
+          <label><input type="checkbox" value="4"><span data-i18n="thu">四</span></label>
+          <label><input type="checkbox" value="5"><span data-i18n="fri">五</span></label>
+          <label><input type="checkbox" value="6"><span data-i18n="sat">六</span></label>
+          <label><input type="checkbox" value="0" checked><span data-i18n="sun">日</span></label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="avoidDates">避开具体日期（用逗号分隔，如节假日：2026-06-01, 2026-10-01）</label>
+        <input type="text" id="avoidDates" placeholder="2026-06-01, 2026-10-01">
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btnGenerate" data-i18n="btnGenerate">
+      生成注射日历
+    </button>
+  </div>
+
+  <!-- Results Card -->
+  <div class="card results" id="results-card">
+    <div class="card-header">
+      <span data-i18n="resultsTitle">注射日程</span>
+      <button class="btn" style="padding:6px 12px;font-size:13px;margin-left:auto" id="btnPrint" data-i18n="btnPrint">打印</button>
+    </div>
+    <div class="summary-bar" id="summaryBar"></div>
+    <div class="paywall-overlay blurred" id="paywallOverlay">
+      <div class="injection-list" id="injectionList"></div>
+    </div>
+    <div class="paywall-cta" id="paywallCta">
+      <h3 data-i18n="paywallTitle">解锁完整疗程日历</h3>
+      <p data-i18n="paywallDesc">免费展示前5次注射。解锁全部 <span id="totalLocked"></span> 次注射安排，含可打印版本。</p>
+      <div class="paywall-buttons">
+        <a href="https://www.paypal.com/paypalme/pinplan" target="_blank" class="btn btn-pay" id="btnPay" data-i18n="btnPay">PayPal $1 解锁</a>
+        <a href="https://tally.so/r/rjkrJp" target="_blank" class="btn btn-email" id="btnEmail" data-i18n="btnEmail">留下邮箱 · 免费获取</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <p>PinPlan &copy; 2026 &middot; <a href="#" id="btnReset" data-i18n="reset">重置计算</a></p>
+</footer>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ===== I18N =====
+const i18n = {
+  zh: {
+    subtitle: '精准注射日程规划 — 自动避开公休日，生成完整疗程日历',
+    formTitle: '疗程信息',
+    badgeRequired: '必填',
+    badgeOptional: '选填',
+    startDate: '首次注射日期 *',
+    weeks: '疗程周数 *',
+    frequency: '每周注射频次 *',
+    preferDays: '首选注射日（请选择与频次相同数量的日期）',
+    mon: '一', tue: '二', wed: '三', thu: '四', fri: '五', sat: '六', sun: '日',
+    avoidTitle: '避开日期设置',
+    avoidDays: '避开每周固定休息日（如医院周日不接诊）',
+    avoidDates: '避开具体日期（用逗号分隔，如节假日：2026-06-01, 2026-10-01）',
+    btnGenerate: '生成注射日历',
+    resultsTitle: '注射日程',
+    btnPrint: '打印',
+    paywallTitle: '解锁完整疗程日历',
+    paywallDesc: '免费展示前5次注射。解锁全部',
+    paywallDesc2: '次注射安排，含可打印版本。',
+    btnPay: 'PayPal $1 解锁',
+    btnEmail: '留下邮箱 · 免费获取',
+    reset: '重置计算',
+    totalInjections: '总注射次数',
+    duration: '疗程跨度',
+    nextInjection: '下次注射',
+    weekLabel: '第',
+    weekLabel2: '周',
+    unlocked: '已解锁完整版',
+    copied: '已复制到剪贴板',
+    noMatch: '请选择与频次相同数量的首选注射日',
+    pastDate: '请选择今天或之后的日期',
+    invalidDate: '请正确填写首次注射日期',
+    emptyResult: '未能生成注射日程，请检查输入。',
+    sunday: '周日', monday: '周一', tuesday: '周二', wednesday: '周三',
+    thursday: '周四', friday: '周五', saturday: '周六'
+  },
+  en: {
+    subtitle: 'Plan injection schedules — auto-skip rest days, full treatment calendar',
+    formTitle: 'Treatment Info',
+    badgeRequired: 'Required',
+    badgeOptional: 'Optional',
+    startDate: 'First Injection Date *',
+    weeks: 'Treatment Duration (weeks) *',
+    frequency: 'Injections Per Week *',
+    preferDays: 'Preferred Injection Days (select same number as frequency)',
+    mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun',
+    avoidTitle: 'Days to Avoid',
+    avoidDays: 'Skip these weekdays (e.g. clinic closed on Sundays)',
+    avoidDates: 'Skip specific dates (comma-separated, e.g. holidays: 2026-12-25, 2027-01-01)',
+    btnGenerate: 'Generate Calendar',
+    resultsTitle: 'Injection Schedule',
+    btnPrint: 'Print',
+    paywallTitle: 'Unlock Full Schedule',
+    paywallDesc: 'First 5 injections shown for free. Unlock all',
+    paywallDesc2: 'injections with print version.',
+    btnPay: 'PayPal $1 to Unlock',
+    btnEmail: 'Get Free via Email',
+    reset: 'Reset',
+    totalInjections: 'Total Injections',
+    duration: 'Duration',
+    nextInjection: 'Next Injection',
+    weekLabel: 'Week ',
+    weekLabel2: '',
+    unlocked: 'Full version unlocked',
+    copied: 'Copied to clipboard',
+    noMatch: 'Please select the same number of preferred days as your frequency.',
+    pastDate: 'Please select today or a future date.',
+    invalidDate: 'Please enter a valid first injection date.',
+    emptyResult: 'Could not generate schedule. Check your inputs.',
+    sunday: 'Sunday', monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday',
+    thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday'
+  }
+};
+
+const DAY_NAMES = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+
+let currentLang = 'zh';
+
+function t(key) { return i18n[currentLang][key] || key; }
+
+// ===== STATE =====
+let schedule = [];
+let isUnlocked = false;
+
+// ===== DOM REFS =====
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+const dom = {
+  startDate: $('#startDate'),
+  weeks: $('#weeks'),
+  frequency: $('#frequency'),
+  preferDays: $('#preferDays'),
+  avoidDays: $('#avoidDays'),
+  avoidDates: $('#avoidDates'),
+  btnGenerate: $('#btnGenerate'),
+  resultsCard: $('#results-card'),
+  summaryBar: $('#summaryBar'),
+  injectionList: $('#injectionList'),
+  paywallOverlay: $('#paywallOverlay'),
+  paywallCta: $('#paywallCta'),
+  totalLocked: $('#totalLocked'),
+  toast: $('#toast'),
+  btnPrint: $('#btnPrint'),
+  btnReset: $('#btnReset'),
+  btnZh: $('#btn-zh'),
+  btnEn: $('#btn-en'),
+};
+
+// ===== DATE UTILS =====
+function fmtDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function fmtDisplay(d, lang) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  if (lang === 'zh') return `${y}年${m}月${day}日`;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[d.getMonth()]} ${d.getDate()}, ${y}`;
+}
+
+function weekdayName(d, lang) {
+  const key = DAY_NAMES[d.getDay()];
+  return i18n[currentLang][key] || key;
+}
+
+function dateKey(d) {
+  return fmtDate(d);
+}
+
+function parseDate(str) {
+  if (!str) return null;
+  const parts = str.split('-');
+  if (parts.length !== 3) return null;
+  const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  if (isNaN(d.getTime())) return null;
+  return d;
+}
+
+function addDays(d, n) {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+
+function diffDays(a, b) {
+  return Math.round((b - a) / (1000 * 60 * 60 * 24));
+}
+
+// ===== SCHEDULE GENERATOR =====
+function generateSchedule(startDate, totalWeeks, freqDays, avoidWeekdays, avoidDateSet) {
+  const endDate = addDays(startDate, totalWeeks * 7);
+  const allTargets = [];
+
+  // Generate all candidate dates
+  let cursor = new Date(startDate);
+  while (cursor < endDate) {
+    if (freqDays.has(cursor.getDay())) {
+      allTargets.push(new Date(cursor));
+    }
+    cursor = addDays(cursor, 1);
+  }
+
+  // Resolve conflicts
+  const resolved = [];
+  const usedKeys = new Set();
+
+  for (const dt of allTargets) {
+    let adjusted = new Date(dt);
+
+    // Push forward until we find an available day
+    let safety = 0;
+    while (safety < 365) {
+      const dw = adjusted.getDay();
+      const dk = dateKey(adjusted);
+      if (!avoidWeekdays.has(dw) && !avoidDateSet.has(dk) && !usedKeys.has(dk)) {
+        break;
+      }
+      adjusted = addDays(adjusted, 1);
+      safety++;
+    }
+
+    const dk = dateKey(adjusted);
+    // Still include even if past endDate (treatment might extend slightly)
+    resolved.push({ date: adjusted, key: dk });
+    usedKeys.add(dk);
+  }
+
+  return resolved;
+}
+
+function getWeekNumber(startDate, targetDate) {
+  const days = diffDays(startDate, targetDate);
+  return Math.floor(days / 7) + 1;
+}
+
+// ===== RENDER =====
+function renderSummary() {
+  if (schedule.length === 0) return;
+  const first = schedule[0].date;
+  const last = schedule[schedule.length - 1].date;
+  const days = diffDays(first, last) + 1;
+
+  dom.summaryBar.innerHTML = `
+    <div class="summary-item">
+      <div class="num">${schedule.length}</div>
+      <div class="label">${t('totalInjections')}</div>
+    </div>
+    <div class="summary-item">
+      <div class="num">${days}</div>
+      <div class="label">${t('duration')} (${t('days') || '天'})</div>
+    </div>
+    <div class="summary-item">
+      <div class="num">${fmtDisplay(first, currentLang)}</div>
+      <div class="label">${t('nextInjection')}</div>
+    </div>
+  `;
+}
+
+function renderList() {
+  if (schedule.length === 0) return;
+  const startDate = schedule[0].date;
+
+  let html = '';
+  schedule.forEach((item, i) => {
+    const wn = getWeekNumber(startDate, item.date);
+    html += `
+      <div class="injection-item">
+        <div class="order">${i + 1}</div>
+        <div class="info">
+          <div class="date-str">${fmtDisplay(item.date, currentLang)}</div>
+          <div class="day-str">${weekdayName(item.date, currentLang)} &middot; ${t('weekLabel')}${wn}${t('weekLabel2')}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  dom.injectionList.innerHTML = html;
+  dom.totalLocked.textContent = schedule.length;
+}
+
+function renderPaywall() {
+  if (isUnlocked) {
+    dom.paywallOverlay.classList.remove('blurred');
+    dom.paywallCta.style.display = 'none';
+  } else {
+    dom.paywallOverlay.classList.add('blurred');
+    dom.paywallCta.style.display = '';
+    dom.paywallCta.querySelector('p').innerHTML =
+      t('paywallDesc') + ' <span id="totalLocked">' + schedule.length + '</span> ' + t('paywallDesc2');
+  }
+}
+
+function updateUI() {
+  renderSummary();
+  renderList();
+  renderPaywall();
+  dom.resultsCard.classList.add('show');
+  dom.resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ===== UNLOCK =====
+function unlock() {
+  isUnlocked = true;
+  localStorage.setItem('pinplan_unlocked', '1');
+  renderPaywall();
+  showToast(t('unlocked'));
+}
+
+function checkUnlocked() {
+  return localStorage.getItem('pinplan_unlocked') === '1';
+}
+
+// ===== TOAST =====
+let toastTimer;
+function showToast(msg) {
+  dom.toast.textContent = msg;
+  dom.toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => dom.toast.classList.remove('show'), 2000);
+}
+
+// ===== EVENT HANDLERS =====
+function getCheckedValues(selector) {
+  const set = new Set();
+  $$(selector + ' input:checked').forEach(cb => set.add(parseInt(cb.value)));
+  return set;
+}
+
+function setDefaultPreferDays(freq) {
+  const defaults = {
+    1: [1],
+    2: [1, 4],
+    3: [1, 3, 5]
+  };
+  const days = defaults[freq] || [1];
+  const cbs = $$('#preferDays input');
+  cbs.forEach(cb => { cb.checked = days.includes(parseInt(cb.value)); });
+}
+
+function setDefaultAvoidDays() {
+  const cbs = $$('#avoidDays input');
+  cbs.forEach(cb => { cb.checked = parseInt(cb.value) === 0; });
+}
+
+function handleGenerate() {
+  const startStr = dom.startDate.value;
+  if (!startStr) { showToast(t('invalidDate')); return; }
+
+  const startDate = parseDate(startStr);
+  if (!startDate) { showToast(t('invalidDate')); return; }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const totalWeeks = parseInt(dom.weeks.value);
+  const freq = parseInt(dom.frequency.value);
+  const preferDays = getCheckedValues('#preferDays');
+  const avoidWeekdays = getCheckedValues('#avoidDays');
+
+  // Validate preferred days count matches frequency
+  if (preferDays.size !== freq) {
+    showToast(t('noMatch'));
+    return;
+  }
+
+  // Parse avoid dates
+  const avoidDateSet = new Set();
+  const avoidStr = dom.avoidDates.value.trim();
+  if (avoidStr) {
+    avoidStr.split(/[,，\s]+/).forEach(s => {
+      s = s.trim();
+      if (s) {
+        const d = parseDate(s);
+        if (d) avoidDateSet.add(fmtDate(d));
+      }
+    });
+  }
+
+  // Generate
+  schedule = generateSchedule(startDate, totalWeeks, preferDays, avoidWeekdays, avoidDateSet);
+
+  if (schedule.length === 0) {
+    showToast(t('emptyResult'));
+    return;
+  }
+
+  updateUI();
+}
+
+function handleFrequencyChange() {
+  const freq = parseInt(dom.frequency.value);
+  setDefaultPreferDays(freq);
+}
+
+function switchLang(lang) {
+  currentLang = lang;
+  dom.btnZh.classList.toggle('active', lang === 'zh');
+  dom.btnEn.classList.toggle('active', lang === 'en');
+
+  // Update all [data-i18n] elements
+  $$('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (el.tagName === 'INPUT' && el.type === 'text') {
+      el.placeholder = t(key);
+    } else if (el.tagName === 'SELECT' || el.tagName === 'OPTION') {
+      // skip
+    } else {
+      el.textContent = t(key);
+    }
+  });
+
+  // Update subtitle
+  $('.subtitle').textContent = t('subtitle');
+
+  // Re-render if schedule exists
+  if (schedule.length > 0) {
+    renderSummary();
+    renderList();
+  }
+}
+
+function handlePrint() {
+  window.print();
+}
+
+function handleReset() {
+  schedule = [];
+  isUnlocked = false;
+  localStorage.removeItem('pinplan_unlocked');
+  dom.resultsCard.classList.remove('show');
+  dom.injectionList.innerHTML = '';
+  dom.summaryBar.innerHTML = '';
+  dom.startDate.value = '';
+  dom.avoidDates.value = '';
+  dom.weeks.value = '8';
+  dom.frequency.value = '3';
+  setDefaultPreferDays(3);
+  setDefaultAvoidDays();
+  dom.paywallOverlay.classList.add('blurred');
+  dom.paywallCta.style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast(t('reset'));
+}
+
+// ===== INIT =====
+function init() {
+  // Set default start date to today
+  const today = new Date();
+  dom.startDate.value = fmtDate(today);
+  setDefaultPreferDays(3);
+  setDefaultAvoidDays();
+
+  // Restore unlock state
+  if (checkUnlocked()) {
+    isUnlocked = true;
+  }
+
+  // Events
+  dom.btnGenerate.addEventListener('click', handleGenerate);
+  dom.frequency.addEventListener('change', handleFrequencyChange);
+  dom.btnPrint.addEventListener('click', handlePrint);
+  dom.btnReset.addEventListener('click', handleReset);
+  dom.btnZh.addEventListener('click', () => switchLang('zh'));
+  dom.btnEn.addEventListener('click', () => switchLang('en'));
+
+  // Unlock on PayPal click (track intent) or Tally click
+  dom.btnPay.addEventListener('click', (e) => {
+    // Track payment intent — user clicked PayPal
+    unlock();
+    // PayPal link still opens in new tab
+  });
+  dom.btnEmail.addEventListener('click', (e) => {
+    // Track email lead — user clicked Tally
+    unlock();
+    // Tally link still opens in new tab
+  });
+
+  // Keyboard shortcut: Enter to generate
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && document.activeElement && document.activeElement.closest('#input-card')) {
+      e.preventDefault();
+      handleGenerate();
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
