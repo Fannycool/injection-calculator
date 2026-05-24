@@ -410,12 +410,13 @@ body {
       <div class="injection-list" id="injectionList"></div>
     </div>
     <div class="paywall-cta" id="paywallCta">
-      <h3 data-i18n="paywallTitle">解锁完整疗程日历</h3>
-      <p data-i18n="paywallDesc">免费展示前5次注射。解锁全部 <span id="totalLocked"></span> 次注射安排，含可打印版本。</p>
+      <h3 data-i18n="paywallTitle">Unlock Your Full Injection Schedule</h3>
+      <p data-i18n="paywallDesc">First 5 injections shown for free. See all <span id="totalLocked"></span> injections to stay on track.</p>
       <div class="paywall-buttons">
-        <a href="https://www.paypal.com/paypalme/pinplan/1" target="_blank" class="btn btn-pay" id="btnPay" data-i18n="btnPay">PayPal $1 解锁</a>
-        <a href="https://tally.so/r/lbMlop" target="_blank" class="btn btn-email" id="btnEmail" data-i18n="btnEmail">留下邮箱 · 免费获取</a>
+        <a href="https://www.paypal.com/paypalme/pinplan/1" target="_blank" class="btn btn-pay" data-i18n="btnPay">Unlock Full Schedule — $1</a>
+        <a href="https://tally.so/r/lbMlop" target="_blank" class="btn btn-email" data-i18n="btnEmail">Email My Schedule (Free)</a>
       </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:14px">Already paid or submitted? <a href="#" id="btnUnlock" style="color:var(--primary);font-weight:600">Unlock now →</a></p>
     </div>
   </div>
 </main>
@@ -851,16 +852,10 @@ function init() {
   dom.frequency.addEventListener('change', handleFrequencyChange);
   dom.btnPrint.addEventListener('click', handlePrint);
   dom.btnReset.addEventListener('click', handleReset);
-  // Unlock on PayPal click (track intent) or Tally click
-  dom.btnPay.addEventListener('click', (e) => {
-    // Track payment intent — user clicked PayPal
+  // Manual unlock after payment/email
+  $('#btnUnlock').addEventListener('click', (e) => {
+    e.preventDefault();
     unlock();
-    // PayPal link still opens in new tab
-  });
-  dom.btnEmail.addEventListener('click', (e) => {
-    // Track email lead — user clicked Tally
-    unlock();
-    // Tally link still opens in new tab
   });
 
   // Keyboard shortcut: Enter to generate
