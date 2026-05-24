@@ -144,21 +144,34 @@ body {
 .day-checkboxes label {
   display: flex; align-items: center; justify-content: center;
   width: 42px; height: 42px;
-  border: 1.5px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 50%;
-  font-size: 13px; font-weight: 500;
+  font-size: 13px; font-weight: 600;
   cursor: pointer; transition: all .2s;
-  background: #FAFBFC; user-select: none;
+  background: #fff; color: var(--text-secondary);
+  user-select: none;
 }
 .day-checkboxes input { display: none; }
-.day-checkboxes input:checked + span {
+.day-checkboxes label:has(input:checked) {
   background: var(--primary); color: #fff; border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(37,99,235,.3);
 }
 .day-checkboxes label:hover {
-  border-color: var(--primary);
+  border-color: var(--primary); background: var(--primary-light);
+}
+.day-checkboxes label:has(input:checked):hover {
+  background: var(--primary-dark); border-color: var(--primary-dark);
 }
 .day-checkboxes.disabled label {
   opacity: .4; pointer-events: none;
+}
+/* Avoid days use a different accent */
+.avoid-days label:has(input:checked) {
+  background: #F59E0B; border-color: #F59E0B;
+  box-shadow: 0 2px 8px rgba(245,158,11,.3);
+}
+.avoid-days label:has(input:checked):hover {
+  background: #D97706; border-color: #D97706;
 }
 
 .avoid-section { margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border); }
