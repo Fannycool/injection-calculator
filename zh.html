@@ -338,22 +338,22 @@ body {
       <div class="form-group">
         <label data-i18n="weeks">疗程周数 *</label>
         <select id="weeks">
-          <option value="4">4 周</option>
-          <option value="8" selected>8 周</option>
-          <option value="12">12 周</option>
-          <option value="16">16 周</option>
-          <option value="24">24 周</option>
-          <option value="36">36 周</option>
-          <option value="48">48 周</option>
-          <option value="52">52 周</option>
+          <option value="4" data-i18n="week4">4 周</option>
+          <option value="8" selected data-i18n="week8">8 周</option>
+          <option value="12" data-i18n="week12">12 周</option>
+          <option value="16" data-i18n="week16">16 周</option>
+          <option value="24" data-i18n="week24">24 周</option>
+          <option value="36" data-i18n="week36">36 周</option>
+          <option value="48" data-i18n="week48">48 周</option>
+          <option value="52" data-i18n="week52">52 周</option>
         </select>
       </div>
       <div class="form-group">
         <label data-i18n="frequency">每周注射频次 *</label>
         <select id="frequency">
-          <option value="1">1 次/周</option>
-          <option value="2">2 次/周</option>
-          <option value="3" selected>3 次/周</option>
+          <option value="1" data-i18n="freq1">1 次/周</option>
+          <option value="2" data-i18n="freq2">2 次/周</option>
+          <option value="3" selected data-i18n="freq3">3 次/周</option>
         </select>
       </div>
     </div>
@@ -465,7 +465,10 @@ const i18n = {
     invalidDate: '请正确填写首次注射日期',
     emptyResult: '未能生成注射日程，请检查输入。',
     sunday: '周日', monday: '周一', tuesday: '周二', wednesday: '周三',
-    thursday: '周四', friday: '周五', saturday: '周六'
+    thursday: '周四', friday: '周五', saturday: '周六',
+    week4: '4 周', week8: '8 周', week12: '12 周', week16: '16 周',
+    week24: '24 周', week36: '36 周', week48: '48 周', week52: '52 周',
+    freq1: '1 次/周', freq2: '2 次/周', freq3: '3 次/周'
   },
   en: {
     subtitle: 'Plan injection schedules — auto-skip rest days, full treatment calendar',
@@ -501,7 +504,10 @@ const i18n = {
     invalidDate: 'Please enter a valid first injection date.',
     emptyResult: 'Could not generate schedule. Check your inputs.',
     sunday: 'Sunday', monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday',
-    thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday'
+    thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday',
+    week4: '4 weeks', week8: '8 weeks', week12: '12 weeks', week16: '16 weeks',
+    week24: '24 weeks', week36: '36 weeks', week48: '48 weeks', week52: '52 weeks',
+    freq1: '1 time/week', freq2: '2 times/week', freq3: '3 times/week'
   }
 };
 
@@ -818,8 +824,8 @@ function initI18n() {
     const key = el.getAttribute('data-i18n');
     if (el.tagName === 'INPUT' && el.type === 'text') {
       el.placeholder = t(key);
-    } else if (el.tagName === 'SELECT' || el.tagName === 'OPTION') {
-      // skip selects/options
+    } else if (el.tagName === 'SELECT') {
+      // skip select wrapper, options handled separately
     } else {
       el.textContent = t(key);
     }
