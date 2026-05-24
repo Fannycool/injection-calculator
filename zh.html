@@ -320,7 +320,6 @@ body {
     PinPlan
   </div>
   <p class="subtitle">精准注射日程规划 — 自动避开公休日，生成完整疗程日历</p>
-  <a class="lang-link" href="index.html">English</a>
 </header>
 
 <main>
@@ -423,6 +422,7 @@ body {
 
 <footer class="footer">
   <p>PinPlan &copy; 2026 &middot; <a href="#" id="btnReset" data-i18n="reset">重置计算</a></p>
+  <p style="margin-top:8px"><a class="lang-link" href="index.html">English</a></p>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -812,8 +812,23 @@ function handleReset() {
   showToast(t('reset'));
 }
 
+// ===== INIT I18N =====
+function initI18n() {
+  $$('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (el.tagName === 'INPUT' && el.type === 'text') {
+      el.placeholder = t(key);
+    } else if (el.tagName === 'SELECT' || el.tagName === 'OPTION') {
+      // skip selects/options
+    } else {
+      el.textContent = t(key);
+    }
+  });
+}
+
 // ===== INIT =====
 function init() {
+  initI18n();
   // Set default start date to today
   const today = new Date();
   dom.startDate.value = fmtDate(today);
